@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "secondchat",
+  "version": "${version}",
+  "name": "SecondChat",
+  "description": "${description}",
+  "authors": [
+    {
+      "name": "FlorianMichael/EnZaXD",
+      "contact": {
+        "email": "florian.michael07@gmail.com",
+        "homepage": "https://github.com/FlorianMichael"
+      }
+    }
+  ],
+  "contributors": [
+    {
+      "name": "GitHub contributors",
+      "contact": {
+        "homepage": "https://github.com/FlorianMichael/SecondChat/graphs/contributors"
+      }
+    }
+  ],
+  "contact": {
+    "homepage": "https://florianmichael.de/",
+    "sources": "https://github.com/FlorianMichael/SecondChat",
+    "issues": "https://github.com/FlorianMichael/SecondChat/issues",
+    "email": "florian.michael07@gmail.com"
+  },
+  "license": "GPL-v3",
+  "icon": "assets/secondchat/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [ "de.florianmichael.secondchat.SecondChat" ],
+    "modmenu": [ "de.florianmichael.secondchat.SecondChat" ]
+  },
+  "mixins": [
+    "secondchat.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "${mcVersion}",
+    "java": ">=21"
+  }
+}
