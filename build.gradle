@@ -15,12 +15,18 @@ base {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "TerraformersMC"
+        url = "https://maven.terraformersmc.com/releases"
+    }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_version}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modCompileOnly "com.terraformersmc:modmenu:13.0.0"
 }
 
 java {

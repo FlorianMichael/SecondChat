@@ -1,0 +1,12 @@
+{
+  "modmenu.descriptionTranslation.secondchat": "Fabric mod to add another optional chat hud.",
+
+  "secondchat.config.title": "SecondChat Configuration",
+
+  "secondchat.config.filter.equals": "Equals",
+  "secondchat.config.filter.equals_ignore_case": "Equals (ignore case)",
+  "secondchat.config.filter.contains": "Contains",
+  "secondchat.config.filter.starts_with": "Starts with",
+  "secondchat.config.filter.ends_with": "Ends with",
+  "secondchat.config.filter.regex": "Regex"
+}
