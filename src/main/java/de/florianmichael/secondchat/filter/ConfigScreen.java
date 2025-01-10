@@ -43,7 +43,7 @@ public final class ConfigScreen extends Screen {
 
     private TextFieldWidget textField;
     private ButtonWidget addButton;
-    private FilterType filterType = FilterType.EQUALS;
+    private FilterType filterType = FilterType.CONTAINS;
 
     private FilterRule alreadyAdded;
 

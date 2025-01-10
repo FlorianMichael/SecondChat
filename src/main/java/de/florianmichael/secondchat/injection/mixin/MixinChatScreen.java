@@ -95,7 +95,7 @@ public abstract class MixinChatScreen extends Screen {
     }
 
     @Unique
-    private double secondChat$fixMouseX(double mouseX) {
+    private double secondChat$fixMouseX(final double mouseX) {
         return mouseX - client.getWindow().getScaledWidth() + SecondChat.instance().getChatWidth(secondChat$getChatHud());
     }
 
