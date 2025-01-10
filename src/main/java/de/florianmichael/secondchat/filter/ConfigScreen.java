@@ -26,17 +26,18 @@ import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public final class ConfigScreen extends Screen {
     private static final int RED_TRANSPARENT = 0x80FF0000;
+    private static final int PADDING = 3;
 
     // They sum up to 300
     private static final int TEXT_FIELD_WIDTH = 150;
     private static final int FILTER_BUTTON_WIDTH = 130;
     private static final int ADD_BUTTON_WIDTH = 20;
-    private static final int PADDING = 3;
 
     private final Screen parent;
 
@@ -86,6 +87,7 @@ public final class ConfigScreen extends Screen {
                 .position(x, y)
                 .size(ADD_BUTTON_WIDTH, ButtonWidget.DEFAULT_HEIGHT)
                 .build());
+        addButton.active = false;
 
         addDrawableChild(ButtonWidget
                 .builder(Text.of("<-"), button -> client.setScreen(parent))
@@ -163,6 +165,13 @@ public final class ConfigScreen extends Screen {
         }
 
         @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            SecondChat.instance().remove(rule);
+            client.setScreen(new ConfigScreen(parent));
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             final MatrixStack matrices = context.getMatrices();
 
@@ -170,7 +179,9 @@ public final class ConfigScreen extends Screen {
             matrices.push();
             matrices.translate(x, y, 0);
             context.fill(0, 0, entryWidth - INNER_PADDING * 2, entryHeight, color);
-            context.drawTextWithShadow(textRenderer, Text.of(rule.value()), INNER_PADDING, INNER_PADDING, -1);
+
+            final MutableText base = Text.literal(rule.value());
+            context.drawTextWithShadow(textRenderer, hovered ? base.formatted(Formatting.ITALIC, Formatting.RED) : base, INNER_PADDING, INNER_PADDING, -1);
             context.drawTextWithShadow(textRenderer, getNarration(), entryWidth - textRenderer.getWidth(getNarration()) - INNER_PADDING * 2, INNER_PADDING, Formatting.GOLD.getColorValue());
             matrices.pop();
         }
