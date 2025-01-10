@@ -20,6 +20,7 @@ package de.florianmichael.secondchat.injection.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import de.florianmichael.secondchat.SecondChat;
 import de.florianmichael.secondchat.injection.access.IInGameHud;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -31,7 +32,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -63,7 +63,7 @@ public abstract class MixinChatScreen extends Screen {
         if (secondChat$mainChatFocused) {
             return original.call(instance, mouseX, mouseY);
         } else {
-            return secondChat$getChatHud().mouseClicked(mouseX, mouseY);
+            return secondChat$getChatHud().mouseClicked(secondChat$fixMouseX(mouseX), mouseY);
         }
     }
     @WrapOperation(method = { "render" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getIndicatorAt(DD)Lnet/minecraft/client/gui/hud/MessageIndicator;"))
@@ -71,14 +71,14 @@ public abstract class MixinChatScreen extends Screen {
         if (secondChat$mainChatFocused) {
             return original.call(instance, mouseX, mouseY);
         } else {
-            return secondChat$getChatHud().getIndicatorAt(mouseX, mouseY);
+            return secondChat$getChatHud().getIndicatorAt(secondChat$fixMouseX(mouseX), mouseY);
         }
     }
 
     @Inject(method = "getTextStyleAt", at = @At("HEAD"), cancellable = true)
     public void textStyleSecondChat(double x, double y, CallbackInfoReturnable<Style> cir) {
         if (!secondChat$mainChatFocused) {
-            cir.setReturnValue(secondChat$getChatHud().getTextStyleAt(x, y));
+            cir.setReturnValue(secondChat$getChatHud().getTextStyleAt(secondChat$fixMouseX(x), y));
         }
     }
 
@@ -86,14 +86,17 @@ public abstract class MixinChatScreen extends Screen {
     public void decideFocusedChat(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         secondChat$mainChatFocused = mouseX <= width / 2;
 
-        final ChatHud secondChat$chatHud = secondChat$getChatHud();
-        final int width = MathHelper.ceil((float) secondChat$chatHud.getWidth() / (float) secondChat$chatHud.getChatScale());
-
         final MatrixStack matrices = context.getMatrices();
         matrices.push();
-        matrices.translate(client.getWindow().getScaledWidth() - width - 10, 0, 0);
-        secondChat$chatHud.render(context, client.inGameHud.getTicks(), mouseX, mouseY, true);
+        final ChatHud secondChat = secondChat$getChatHud();
+        matrices.translate(client.getWindow().getScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0, 0);
+        secondChat.render(context, client.inGameHud.getTicks(), mouseX, mouseY, true);
         matrices.pop();
+    }
+
+    @Unique
+    private double secondChat$fixMouseX(double mouseX) {
+        return mouseX - client.getWindow().getScaledWidth() + SecondChat.instance().getChatWidth(secondChat$getChatHud());
     }
 
     @Unique

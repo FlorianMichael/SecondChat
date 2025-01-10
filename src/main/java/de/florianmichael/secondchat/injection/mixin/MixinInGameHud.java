@@ -18,6 +18,7 @@
 
 package de.florianmichael.secondchat.injection.mixin;
 
+import de.florianmichael.secondchat.SecondChat;
 import de.florianmichael.secondchat.injection.access.IInGameHud;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -26,7 +27,6 @@ import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -80,11 +80,9 @@ public abstract class MixinInGameHud implements IInGameHud {
     private void secondChat$renderChat(final DrawContext context, final RenderTickCounter tickCounter) {
         secondChat$replacingChatHud = true;
 
-        final int width = MathHelper.ceil((float) secondChat$chatHud.getWidth() / (float) secondChat$chatHud.getChatScale());
-
         final MatrixStack matrices = context.getMatrices();
         matrices.push();
-        matrices.translate(client.getWindow().getScaledWidth() - width - 10, 0, 0);
+        matrices.translate(client.getWindow().getScaledWidth() - SecondChat.instance().getChatWidth(secondChat$chatHud), 0, 0);
         this.renderChat(context, tickCounter);
         matrices.pop();
 
