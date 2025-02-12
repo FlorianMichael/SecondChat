@@ -32,7 +32,7 @@ dependencies {
     modImplementation fabricApi.module("fabric-screen-api-v1", project.fabric_api_version)
     modImplementation fabricApi.module("fabric-key-binding-api-v1", project.fabric_api_version)
     modImplementation fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version)
-    modImplementation "com.terraformersmc:modmenu:13.0.1"
+    modImplementation "com.terraformersmc:modmenu:13.0.2"
 }
 
 java {
