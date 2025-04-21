@@ -26,8 +26,8 @@ import de.florianmichael.secondchat.filter.ConfigScreen;
 import de.florianmichael.secondchat.filter.FilterRule;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,8 +65,8 @@ public final class SecondChat implements ClientModInitializer, ModMenuApi {
         }
     }
 
-    public int getChatWidth(final ChatHud chatHud) {
-        final int base = MathHelper.ceil((float) chatHud.getWidth() / (float) chatHud.getChatScale());
+    public int getChatWidth(final ChatComponent chatComponent) {
+        final int base = Mth.ceil((float) chatComponent.getWidth() / (float) chatComponent.getScale());
         return base + 3 * 4; // Padding, see ChatHud#render logic
     }
 

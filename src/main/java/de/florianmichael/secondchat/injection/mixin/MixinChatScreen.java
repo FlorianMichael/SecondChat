@@ -20,18 +20,18 @@ package de.florianmichael.secondchat.injection.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.florianmichael.secondchat.SecondChat;
-import de.florianmichael.secondchat.injection.access.IInGameHud;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.hud.MessageIndicator;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import de.florianmichael.secondchat.injection.access.IGui;
+import net.minecraft.client.GuiMessageTag;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,64 +45,64 @@ public abstract class MixinChatScreen extends Screen {
     @Unique
     private boolean secondChat$mainChatFocused;
 
-    protected MixinChatScreen(Text title) {
+    protected MixinChatScreen(Component title) {
         super(title);
     }
 
-    @WrapOperation(method = { "keyPressed", "mouseScrolled" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;scroll(I)V"))
-    private void scrollSecondChat(ChatHud instance, int scroll, Operation<Void> original) {
+    @WrapOperation(method = { "keyPressed", "mouseScrolled" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;scrollChat(I)V"))
+    private void scrollSecondChat(ChatComponent instance, int posInc, Operation<Void> original) {
         if (secondChat$mainChatFocused) {
-            original.call(instance, scroll);
+            original.call(instance, posInc);
         } else {
-            secondChat$getChatHud().scroll(scroll);
+            secondChat$getChatHud().scrollChat(posInc);
         }
     }
 
-    @WrapOperation(method = { "mouseClicked" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;mouseClicked(DD)Z"))
-    private boolean clickSecondChat(ChatHud instance, double mouseX, double mouseY, Operation<Boolean> original) {
+    @WrapOperation(method = { "mouseClicked" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;handleChatQueueClicked(DD)Z"))
+    private boolean clickSecondChat(ChatComponent instance, double mouseX, double mouseY, Operation<Boolean> original) {
         if (secondChat$mainChatFocused) {
             return original.call(instance, mouseX, mouseY);
         } else {
-            return secondChat$getChatHud().mouseClicked(secondChat$fixMouseX(mouseX), mouseY);
+            return secondChat$getChatHud().handleChatQueueClicked(secondChat$fixMouseX(mouseX), mouseY);
         }
     }
-    @WrapOperation(method = { "render" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getIndicatorAt(DD)Lnet/minecraft/client/gui/hud/MessageIndicator;"))
-    private MessageIndicator indicatorSecondChat(ChatHud instance, double mouseX, double mouseY, Operation<MessageIndicator> original) {
+    @WrapOperation(method = { "render" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;getMessageTagAt(DD)Lnet/minecraft/client/GuiMessageTag;"))
+    private GuiMessageTag indicatorSecondChat(ChatComponent instance, double mouseX, double mouseY, Operation<GuiMessageTag> original) {
         if (secondChat$mainChatFocused) {
             return original.call(instance, mouseX, mouseY);
         } else {
-            return secondChat$getChatHud().getIndicatorAt(secondChat$fixMouseX(mouseX), mouseY);
+            return secondChat$getChatHud().getMessageTagAt(secondChat$fixMouseX(mouseX), mouseY);
         }
     }
 
-    @Inject(method = "getTextStyleAt", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getComponentStyleAt", at = @At("HEAD"), cancellable = true)
     public void textStyleSecondChat(double x, double y, CallbackInfoReturnable<Style> cir) {
         if (!secondChat$mainChatFocused) {
-            cir.setReturnValue(secondChat$getChatHud().getTextStyleAt(secondChat$fixMouseX(x), y));
+            cir.setReturnValue(secondChat$getChatHud().getClickedComponentStyleAt(secondChat$fixMouseX(x), y));
         }
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    public void decideFocusedChat(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    public void decideFocusedChat(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         secondChat$mainChatFocused = mouseX <= width / 2;
 
-        final MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        final ChatHud secondChat = secondChat$getChatHud();
-        matrices.translate(client.getWindow().getScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0, 0);
-        secondChat.render(context, client.inGameHud.getTicks(), mouseX, mouseY, true);
-        matrices.pop();
+        final PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
+        final ChatComponent secondChat = secondChat$getChatHud();
+        pose.translate(minecraft.getWindow().getGuiScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0, 0);
+        secondChat.render(guiGraphics, minecraft.gui.getGuiTicks(), mouseX, mouseY, true);
+        pose.popPose();
     }
 
     @Unique
     private double secondChat$fixMouseX(final double mouseX) {
-        return mouseX - client.getWindow().getScaledWidth() + SecondChat.instance().getChatWidth(secondChat$getChatHud());
+        return mouseX - minecraft.getWindow().getGuiScaledWidth() + SecondChat.instance().getChatWidth(secondChat$getChatHud());
     }
 
     @Unique
-    private ChatHud secondChat$getChatHud() {
-        final InGameHud inGameHud = MinecraftClient.getInstance().inGameHud;
-        return ((IInGameHud) inGameHud).secondChat$getChatHud();
+    private ChatComponent secondChat$getChatHud() {
+        final Gui gui = Minecraft.getInstance().gui;
+        return ((IGui) gui).secondChat$getChatComponent();
     }
 
 }

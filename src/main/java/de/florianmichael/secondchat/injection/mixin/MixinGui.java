@@ -18,15 +18,15 @@
 
 package de.florianmichael.secondchat.injection.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.florianmichael.secondchat.SecondChat;
-import de.florianmichael.secondchat.injection.access.IInGameHud;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.LayeredDrawer;
-import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.math.MatrixStack;
+import de.florianmichael.secondchat.injection.access.IGui;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
+import net.minecraft.client.gui.components.ChatComponent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,62 +36,58 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(InGameHud.class)
-public abstract class MixinInGameHud implements IInGameHud {
+@Mixin(Gui.class)
+public abstract class MixinGui implements IGui {
 
     @Shadow
     @Final
-    private ChatHud chatHud;
+    private LayeredDraw layers;
 
     @Shadow
     @Final
-    private LayeredDrawer layeredDrawer;
+    private ChatComponent chat;
+
+    @Shadow
+    protected abstract void renderChat(final GuiGraphics guiGraphics, final DeltaTracker deltaTracker);
 
     @Unique
-    private ChatHud secondChat$chatHud;
+    private ChatComponent secondChat$chatComponent;
 
     @Unique
     private boolean secondChat$replacingChatHud;
 
-    @Shadow
-    @Final
-    private MinecraftClient client;
-
-    @Shadow
-    protected abstract void renderChat(DrawContext context, RenderTickCounter tickCounter);
-
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(MinecraftClient client, CallbackInfo ci) {
-        secondChat$chatHud = new ChatHud(client);
+    private void init(Minecraft minecraft, CallbackInfo ci) {
+        secondChat$chatComponent = new ChatComponent(minecraft);
 
-        layeredDrawer.addLayer(this::secondChat$renderChat);
+        layers.add(this::secondChat$renderChat);
     }
 
-    @Redirect(method = "renderChat", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/InGameHud;chatHud:Lnet/minecraft/client/gui/hud/ChatHud;"))
-    private ChatHud replaceChatHud(InGameHud instance) {
+    @Redirect(method = "renderChat", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/Gui;chat:Lnet/minecraft/client/gui/components/ChatComponent;"))
+    private ChatComponent replaceChatComponent(Gui instance) {
         if (secondChat$replacingChatHud) {
-            return secondChat$chatHud;
+            return secondChat$chatComponent;
         } else {
-            return chatHud;
+            return chat;
         }
     }
 
     @Unique
-    private void secondChat$renderChat(final DrawContext context, final RenderTickCounter tickCounter) {
+    private void secondChat$renderChat(final GuiGraphics guiGraphics, final DeltaTracker deltaTracker) {
         secondChat$replacingChatHud = true;
 
-        final MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(client.getWindow().getScaledWidth() - SecondChat.instance().getChatWidth(secondChat$chatHud), 0, 0);
-        this.renderChat(context, tickCounter);
-        matrices.pop();
+        final PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
+        pose.translate(guiGraphics.guiWidth() - SecondChat.instance().getChatWidth(secondChat$chatComponent), 0, 0);
+        this.renderChat(guiGraphics, deltaTracker);
+        pose.popPose();
 
         secondChat$replacingChatHud = false;
     }
 
     @Override
-    public ChatHud secondChat$getChatHud() {
-        return secondChat$chatHud;
+    public ChatComponent secondChat$getChatComponent() {
+        return secondChat$chatComponent;
     }
 
 }

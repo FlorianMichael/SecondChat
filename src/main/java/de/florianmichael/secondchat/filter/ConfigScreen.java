@@ -18,17 +18,17 @@
 
 package de.florianmichael.secondchat.filter;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.florianmichael.secondchat.SecondChat;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 public final class ConfigScreen extends Screen {
     private static final int RED_TRANSPARENT = 0x80FF0000;
@@ -41,63 +41,63 @@ public final class ConfigScreen extends Screen {
 
     private final Screen parent;
 
-    private TextFieldWidget textField;
-    private ButtonWidget addButton;
+    private EditBox editBox;
+    private Button addButton;
     private FilterType filterType = FilterType.CONTAINS;
 
     private FilterRule alreadyAdded;
 
     public ConfigScreen(final Screen parent) {
-        super(Text.translatable("secondchat.config.title"));
+        super(Component.translatable("secondchat.config.title"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
         super.init();
-        this.addDrawableChild(new SlotList(
-                this.client,
+        this.addRenderableWidget(new SlotList(
+                this.minecraft,
                 width,
                 height,
-                PADDING + PADDING + (textRenderer.fontHeight + 2) * PADDING /* title is 2 */,
+                PADDING + PADDING + (font.lineHeight + 2) * PADDING /* title is 2 */,
                 30,
-                textRenderer.fontHeight + ListEntry.INNER_PADDING * 4
+            font.lineHeight + ListEntry.INNER_PADDING * 4
         ));
 
-        final int y = height - ButtonWidget.DEFAULT_HEIGHT - PADDING - 1;
+        final int y = height - Button.DEFAULT_HEIGHT - PADDING - 1;
         int x = width / 2 - TEXT_FIELD_WIDTH - PADDING - PADDING;
-        textField = addDrawableChild(new TextFieldWidget(this.textRenderer, x, y, TEXT_FIELD_WIDTH, ButtonWidget.DEFAULT_HEIGHT, Text.empty()));
+        editBox = addRenderableWidget(new EditBox(this.font, x, y, TEXT_FIELD_WIDTH, Button.DEFAULT_HEIGHT, Component.empty()));
 
         x += TEXT_FIELD_WIDTH + PADDING;
-        addDrawableChild(ButtonWidget
+        addRenderableWidget(Button
                 .builder(getFilterTypeText(filterType), button -> {
                     filterType = FilterType.values()[(filterType.ordinal() + 1) % FilterType.values().length];
                     button.setMessage(getFilterTypeText(filterType));
                 })
-                .position(x, y)
-                .size(FILTER_BUTTON_WIDTH, ButtonWidget.DEFAULT_HEIGHT)
+                .pos(x, y)
+                .size(FILTER_BUTTON_WIDTH, Button.DEFAULT_HEIGHT)
                 .build());
 
         x += FILTER_BUTTON_WIDTH + PADDING;
-        addButton = addDrawableChild(ButtonWidget
-                .builder(Text.of("+"), button -> {
-                    SecondChat.instance().add(new FilterRule(textField.getText(), filterType));
-                    client.setScreen(new ConfigScreen(parent));
+        addButton = addRenderableWidget(Button
+                .builder(Component.literal("+"), button -> {
+                    SecondChat.instance().add(new FilterRule(editBox.getValue(), filterType));
+                    minecraft.setScreen(new ConfigScreen(parent));
                 })
-                .position(x, y)
-                .size(ADD_BUTTON_WIDTH, ButtonWidget.DEFAULT_HEIGHT)
+                .pos(x, y)
+                .size(ADD_BUTTON_WIDTH, Button.DEFAULT_HEIGHT)
                 .build());
         addButton.active = false;
 
-        addDrawableChild(ButtonWidget
-                .builder(Text.of("<-"), button -> client.setScreen(parent))
-                .position(PADDING, y)
-                .size(ButtonWidget.DEFAULT_HEIGHT, ButtonWidget.DEFAULT_HEIGHT)
+        addRenderableWidget(Button
+                .builder(Component.literal("<-"), button -> minecraft.setScreen(parent))
+                .pos(PADDING, y)
+                .size(Button.DEFAULT_HEIGHT, Button.DEFAULT_HEIGHT)
                 .build());
     }
 
-    private Text getFilterTypeText(final FilterType filterType) {
-        return Text.translatable("secondchat.config.filter." + filterType.name().toLowerCase()).formatted(Formatting.GOLD);
+    private Component getFilterTypeText(final FilterType filterType) {
+        return Component.translatable("secondchat.config.filter." + filterType.name().toLowerCase()).withStyle(ChatFormatting.GOLD);
     }
 
     @Override
@@ -107,33 +107,33 @@ public final class ConfigScreen extends Screen {
             return;
         }
 
-        addButton.active = !textField.getText().isEmpty();
+        addButton.active = !editBox.getValue().isEmpty();
         if (!addButton.active) {
             return;
         }
 
         SecondChat.instance().rules().stream()
-                .filter(rule -> rule.value().equals(textField.getText()) && rule.type() == filterType)
+                .filter(rule -> rule.value().equals(editBox.getValue()) && rule.type() == filterType)
                 .findAny()
                 .ifPresentOrElse(filterRule -> this.alreadyAdded = filterRule, () -> this.alreadyAdded = null);
         addButton.active = alreadyAdded == null;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        final MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.scale(2.0F, 2.0F, 2.0F);
-        context.drawText(client.textRenderer, title, this.width / 4 - client.textRenderer.getWidth(title) / 2, 5, -1, true);
-        matrices.pop();
+        final PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
+        pose.scale(2.0F, 2.0F, 2.0F);
+        guiGraphics.drawString(font, title, this.width / 4 - font.width(title) / 2, 5, -1, true);
+        pose.popPose();
     }
 
-    public class SlotList extends AlwaysSelectedEntryListWidget<ListEntry> {
+    public class SlotList extends ObjectSelectionList<ListEntry> {
 
-        public SlotList(MinecraftClient minecraftClient, int width, int height, int top, int bottom, int entryHeight) {
-            super(minecraftClient, width, height - top - bottom, top, entryHeight);
+        public SlotList(Minecraft minecraft, int width, int height, int top, int bottom, int entryHeight) {
+            super(minecraft, width, height - top - bottom, top, entryHeight);
 
             SecondChat.instance().rules().forEach(rule -> addEntry(new ListEntry(rule)));
         }
@@ -144,13 +144,13 @@ public final class ConfigScreen extends Screen {
         }
 
         @Override
-        protected void drawSelectionHighlight(DrawContext context, int y, int entryWidth, int entryHeight, int borderColor, int fillColor) {
+        protected void renderSelection(GuiGraphics guiGraphics, int top, int width, int height, int outerColor, int innerColor) {
             // Remove selection box
         }
 
     }
 
-    public class ListEntry extends AlwaysSelectedEntryListWidget.Entry<ListEntry> {
+    public class ListEntry extends ObjectSelectionList.Entry<ListEntry> {
         public static final int INNER_PADDING = 2;
 
         private final FilterRule rule;
@@ -160,30 +160,30 @@ public final class ConfigScreen extends Screen {
         }
 
         @Override
-        public Text getNarration() {
+        public Component getNarration() {
             return getFilterTypeText(rule.type());
         }
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             SecondChat.instance().remove(rule);
-            client.setScreen(new ConfigScreen(parent));
+            minecraft.setScreen(new ConfigScreen(parent));
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            final MatrixStack matrices = context.getMatrices();
+        public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            final PoseStack pose = guiGraphics.pose();
 
             final int color = ConfigScreen.this.alreadyAdded == rule ? RED_TRANSPARENT : Integer.MIN_VALUE;
-            matrices.push();
-            matrices.translate(x, y, 0);
-            context.fill(0, 0, entryWidth - INNER_PADDING * 2, entryHeight, color);
+            pose.pushPose();
+            pose.translate(left, top, 0);
+            guiGraphics.fill(0, 0, width - INNER_PADDING * 2, height, color);
 
-            final MutableText base = Text.literal(rule.value());
-            context.drawTextWithShadow(textRenderer, hovered ? base.formatted(Formatting.ITALIC, Formatting.RED) : base, INNER_PADDING, INNER_PADDING, -1);
-            context.drawTextWithShadow(textRenderer, getNarration(), entryWidth - textRenderer.getWidth(getNarration()) - INNER_PADDING * 2, INNER_PADDING, Formatting.GOLD.getColorValue());
-            matrices.pop();
+            final MutableComponent base = Component.literal(rule.value());
+            guiGraphics.drawString(font, hovering ? base.withStyle(ChatFormatting.ITALIC, ChatFormatting.RED) : base, INNER_PADDING, INNER_PADDING, -1);
+            guiGraphics.drawString(font, getNarration(), width - font.width(getNarration()) - INNER_PADDING * 2, INNER_PADDING, ChatFormatting.GOLD.getColor());
+            pose.popPose();
         }
     }
 

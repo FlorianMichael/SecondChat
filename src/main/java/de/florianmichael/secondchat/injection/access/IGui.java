@@ -18,10 +18,10 @@
 
 package de.florianmichael.secondchat.injection.access;
 
-import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.components.ChatComponent;
 
-public interface IInGameHud {
+public interface IGui {
 
-    ChatHud secondChat$getChatHud();
+    ChatComponent secondChat$getChatComponent();
 
 }

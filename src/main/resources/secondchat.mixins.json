@@ -4,9 +4,9 @@
   "package": "de.florianmichael.secondchat.injection.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "MixinChatHud",
+    "MixinChatComponent",
     "MixinChatScreen",
-    "MixinInGameHud"
+    "MixinGui"
   ],
   "injectors": {
     "defaultRequire": 1
