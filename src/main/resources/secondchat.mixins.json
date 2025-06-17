@@ -6,7 +6,8 @@
   "client": [
     "MixinChatComponent",
     "MixinChatScreen",
-    "MixinGui"
+    "MixinGui",
+    "MixinGuiGraphics"
   ],
   "injectors": {
     "defaultRequire": 1

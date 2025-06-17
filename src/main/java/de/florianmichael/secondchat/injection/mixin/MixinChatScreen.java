@@ -20,7 +20,6 @@ package de.florianmichael.secondchat.injection.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.florianmichael.secondchat.SecondChat;
 import de.florianmichael.secondchat.injection.access.IGui;
 import net.minecraft.client.GuiMessageTag;
@@ -32,6 +31,7 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.joml.Matrix3x2fStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -86,12 +86,12 @@ public abstract class MixinChatScreen extends Screen {
     public void decideFocusedChat(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         secondChat$mainChatFocused = mouseX <= width / 2;
 
-        final PoseStack pose = guiGraphics.pose();
-        pose.pushPose();
+        final Matrix3x2fStack pose = guiGraphics.pose();
+        pose.pushMatrix();
         final ChatComponent secondChat = secondChat$getChatHud();
-        pose.translate(minecraft.getWindow().getGuiScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0, 0);
+        pose.translate(minecraft.getWindow().getGuiScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0);
         secondChat.render(guiGraphics, minecraft.gui.getGuiTicks(), mouseX, mouseY, true);
-        pose.popPose();
+        pose.popMatrix();
     }
 
     @Unique

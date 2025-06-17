@@ -18,15 +18,14 @@
 
 package de.florianmichael.secondchat.injection.mixin;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.florianmichael.secondchat.SecondChat;
 import de.florianmichael.secondchat.injection.access.IGui;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.gui.components.ChatComponent;
+import org.joml.Matrix3x2fStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,14 +40,7 @@ public abstract class MixinGui implements IGui {
 
     @Shadow
     @Final
-    private LayeredDraw layers;
-
-    @Shadow
-    @Final
     private ChatComponent chat;
-
-    @Shadow
-    protected abstract void renderChat(final GuiGraphics guiGraphics, final DeltaTracker deltaTracker);
 
     @Unique
     private ChatComponent secondChat$chatComponent;
@@ -56,11 +48,25 @@ public abstract class MixinGui implements IGui {
     @Unique
     private boolean secondChat$replacingChatHud;
 
+    @Shadow
+    protected abstract void renderChat(final GuiGraphics guiGraphics, final DeltaTracker deltaTracker);
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void init(Minecraft minecraft, CallbackInfo ci) {
         secondChat$chatComponent = new ChatComponent(minecraft);
+    }
 
-        layers.add(this::secondChat$renderChat);
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderChat(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V"))
+    private void renderSecondChat(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        secondChat$replacingChatHud = true;
+
+        final Matrix3x2fStack pose = guiGraphics.pose();
+        pose.pushMatrix();
+        pose.translate(guiGraphics.guiWidth() - SecondChat.instance().getChatWidth(secondChat$chatComponent), 0);
+        this.renderChat(guiGraphics, deltaTracker);
+        pose.popMatrix();
+
+        secondChat$replacingChatHud = false;
     }
 
     @Redirect(method = "renderChat", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/Gui;chat:Lnet/minecraft/client/gui/components/ChatComponent;"))
@@ -70,19 +76,6 @@ public abstract class MixinGui implements IGui {
         } else {
             return chat;
         }
-    }
-
-    @Unique
-    private void secondChat$renderChat(final GuiGraphics guiGraphics, final DeltaTracker deltaTracker) {
-        secondChat$replacingChatHud = true;
-
-        final PoseStack pose = guiGraphics.pose();
-        pose.pushPose();
-        pose.translate(guiGraphics.guiWidth() - SecondChat.instance().getChatWidth(secondChat$chatComponent), 0, 0);
-        this.renderChat(guiGraphics, deltaTracker);
-        pose.popPose();
-
-        secondChat$replacingChatHud = false;
     }
 
     @Override
