@@ -26,6 +26,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
@@ -145,10 +146,9 @@ public final class ConfigScreen extends Screen {
         }
 
         @Override
-        protected void renderSelection(GuiGraphics guiGraphics, int top, int width, int height, int outerColor, int innerColor) {
+        protected void renderSelection(final GuiGraphics guiGraphics, final ListEntry entry, final int i) {
             // Remove selection box
         }
-
     }
 
     public class ListEntry extends ObjectSelectionList.Entry<ListEntry> {
@@ -166,23 +166,26 @@ public final class ConfigScreen extends Screen {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(final MouseButtonEvent mouseButtonEvent, final boolean bl) {
             SecondChat.instance().remove(rule);
             minecraft.setScreen(new ConfigScreen(parent));
-            return super.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(mouseButtonEvent, bl);
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void renderContent(final GuiGraphics guiGraphics, final int i, final int j, final boolean bl, final float f) {
             final Matrix3x2fStack pose = guiGraphics.pose();
+
+            final int width = getContentWidth();
+            final int height = getContentHeight();
 
             final int color = ConfigScreen.this.alreadyAdded == rule ? RED_TRANSPARENT : Integer.MIN_VALUE;
             pose.pushMatrix();
-            pose.translate(left, top);
+            pose.translate(getContentX(), getContentY());
             guiGraphics.fill(0, 0, width - INNER_PADDING * 2, height, color);
 
             final MutableComponent base = Component.literal(rule.value());
-            guiGraphics.drawString(font, hovering ? base.withStyle(ChatFormatting.ITALIC, ChatFormatting.RED) : base, INNER_PADDING, INNER_PADDING, -1);
+            guiGraphics.drawString(font, bl ? base.withStyle(ChatFormatting.ITALIC, ChatFormatting.RED) : base, INNER_PADDING, INNER_PADDING, -1);
 
             final Component narration = Component.literal("").append(getNarration()).withStyle(ChatFormatting.GOLD);
             guiGraphics.drawString(font, narration, width - font.width(narration) - INNER_PADDING * 2, INNER_PADDING, -1);

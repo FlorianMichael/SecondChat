@@ -21,6 +21,7 @@ package de.florianmichael.secondchat.injection.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.florianmichael.secondchat.SecondChat;
+import de.florianmichael.secondchat.filter.ConfigScreen;
 import de.florianmichael.secondchat.injection.access.IGui;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
@@ -66,6 +67,7 @@ public abstract class MixinChatScreen extends Screen {
             return secondChat$getChatHud().handleChatQueueClicked(secondChat$fixMouseX(mouseX), mouseY);
         }
     }
+
     @WrapOperation(method = { "render" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;getMessageTagAt(DD)Lnet/minecraft/client/GuiMessageTag;"))
     private GuiMessageTag indicatorSecondChat(ChatComponent instance, double mouseX, double mouseY, Operation<GuiMessageTag> original) {
         if (secondChat$mainChatFocused) {
