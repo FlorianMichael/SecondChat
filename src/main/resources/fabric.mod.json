@@ -32,7 +32,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [ "de.florianmichael.secondchat.SecondChat" ],
-    "modmenu": [ "de.florianmichael.secondchat.SecondChat" ]
+    "modmenu": [ "de.florianmichael.secondchat.filter.ModMenuScreenFactory" ]
   },
   "mixins": [
     "secondchat.mixins.json"

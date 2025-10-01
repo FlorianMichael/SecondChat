@@ -20,17 +20,7 @@ package de.florianmichael.secondchat;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.terraformersmc.modmenu.api.ConfigScreenFactory;
-import com.terraformersmc.modmenu.api.ModMenuApi;
-import de.florianmichael.secondchat.filter.ConfigScreen;
 import de.florianmichael.secondchat.filter.FilterRule;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.util.Mth;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -38,8 +28,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public final class SecondChat implements ClientModInitializer, ModMenuApi {
+public final class SecondChat implements ClientModInitializer {
 
     private /*final*/ static SecondChat INSTANCE;
 
@@ -48,6 +44,10 @@ public final class SecondChat implements ClientModInitializer, ModMenuApi {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private List<FilterRule> rules;
+
+    public static SecondChat instance() {
+        return INSTANCE;
+    }
 
     @Override
     public void onInitializeClient() {
@@ -68,11 +68,6 @@ public final class SecondChat implements ClientModInitializer, ModMenuApi {
     public int getChatWidth(final ChatComponent chatComponent) {
         final int base = Mth.ceil((float) chatComponent.getWidth() / (float) chatComponent.getScale());
         return base + 3 * 4; // Padding, see ChatHud#render logic
-    }
-
-    @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return ConfigScreen::new;
     }
 
     public void save() {
@@ -106,10 +101,6 @@ public final class SecondChat implements ClientModInitializer, ModMenuApi {
 
     public List<FilterRule> rules() {
         return rules;
-    }
-
-    public static SecondChat instance() {
-        return INSTANCE;
     }
 
 }
