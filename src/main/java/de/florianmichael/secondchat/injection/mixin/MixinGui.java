@@ -18,7 +18,6 @@
 
 package de.florianmichael.secondchat.injection.mixin;
 
-import de.florianmichael.secondchat.SecondChat;
 import de.florianmichael.secondchat.injection.access.IGui;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -62,7 +61,7 @@ public abstract class MixinGui implements IGui {
 
         final Matrix3x2fStack pose = guiGraphics.pose();
         pose.pushMatrix();
-        pose.translate(guiGraphics.guiWidth() - SecondChat.instance().getChatWidth(secondChat$chatComponent), 0);
+        pose.translate(guiGraphics.guiWidth() - secondChat$chatComponent.getWidth(), 0);
         this.renderChat(guiGraphics, deltaTracker);
         pose.popMatrix();
 

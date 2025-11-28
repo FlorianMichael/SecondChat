@@ -20,8 +20,6 @@ package de.florianmichael.secondchat.injection.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import de.florianmichael.secondchat.SecondChat;
-import de.florianmichael.secondchat.filter.ConfigScreen;
 import de.florianmichael.secondchat.injection.access.IGui;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
@@ -91,14 +89,14 @@ public abstract class MixinChatScreen extends Screen {
         final Matrix3x2fStack pose = guiGraphics.pose();
         pose.pushMatrix();
         final ChatComponent secondChat = secondChat$getChatHud();
-        pose.translate(minecraft.getWindow().getGuiScaledWidth() - SecondChat.instance().getChatWidth(secondChat), 0);
+        pose.translate(guiGraphics.guiWidth() - secondChat.getWidth(), 0);
         secondChat.render(guiGraphics, minecraft.gui.getGuiTicks(), mouseX, mouseY, true);
         pose.popMatrix();
     }
 
     @Unique
     private double secondChat$fixMouseX(final double mouseX) {
-        return mouseX - minecraft.getWindow().getGuiScaledWidth() + SecondChat.instance().getChatWidth(secondChat$getChatHud());
+        return mouseX - minecraft.getWindow().getGuiScaledWidth() + secondChat$getChatHud().getWidth();
     }
 
     @Unique
