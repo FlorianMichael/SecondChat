@@ -26,7 +26,7 @@ Modrinth - https://modrinth.com/mod/secondchat
 
 Curseforge - https://curseforge.com/minecraft/mc-mods/secondchat
 
-Dev builds - https://build.florianmichael.de/job/SecondChat/
+Dev builds - https://build.florianmichael.de/job/SecondChat
 
 ## Use in Gradle
 

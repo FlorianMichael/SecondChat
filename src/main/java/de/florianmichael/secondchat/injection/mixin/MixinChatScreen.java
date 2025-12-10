@@ -21,22 +21,22 @@ package de.florianmichael.secondchat.injection.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.florianmichael.secondchat.injection.access.IGui;
-import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.joml.Matrix3x2fStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChatScreen.class)
 public abstract class MixinChatScreen extends Screen {
@@ -48,7 +48,10 @@ public abstract class MixinChatScreen extends Screen {
         super(title);
     }
 
-    @WrapOperation(method = { "keyPressed", "mouseScrolled" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;scrollChat(I)V"))
+    @Shadow
+    protected abstract boolean insertionClickMode();
+
+    @WrapOperation(method = {"keyPressed", "mouseScrolled"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;scrollChat(I)V"))
     private void scrollSecondChat(ChatComponent instance, int posInc, Operation<Void> original) {
         if (secondChat$mainChatFocused) {
             original.call(instance, posInc);
@@ -57,29 +60,13 @@ public abstract class MixinChatScreen extends Screen {
         }
     }
 
-    @WrapOperation(method = { "mouseClicked" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;handleChatQueueClicked(DD)Z"))
-    private boolean clickSecondChat(ChatComponent instance, double mouseX, double mouseY, Operation<Boolean> original) {
+    @WrapOperation(method = {"mouseClicked"}, at = @At(value = "NEW", target = "(Lnet/minecraft/client/gui/Font;II)Lnet/minecraft/client/gui/ActiveTextCollector$ClickableStyleFinder;"))
+    private ActiveTextCollector.ClickableStyleFinder clickSecondChat(Font font, int mouseX, int mouseY, Operation<ActiveTextCollector.ClickableStyleFinder> original) {
         if (secondChat$mainChatFocused) {
-            return original.call(instance, mouseX, mouseY);
-        } else {
-            return secondChat$getChatHud().handleChatQueueClicked(secondChat$fixMouseX(mouseX), mouseY);
+            mouseX = secondChat$fixMouseX(mouseX);
         }
-    }
 
-    @WrapOperation(method = { "render" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;getMessageTagAt(DD)Lnet/minecraft/client/GuiMessageTag;"))
-    private GuiMessageTag indicatorSecondChat(ChatComponent instance, double mouseX, double mouseY, Operation<GuiMessageTag> original) {
-        if (secondChat$mainChatFocused) {
-            return original.call(instance, mouseX, mouseY);
-        } else {
-            return secondChat$getChatHud().getMessageTagAt(secondChat$fixMouseX(mouseX), mouseY);
-        }
-    }
-
-    @Inject(method = "getComponentStyleAt", at = @At("HEAD"), cancellable = true)
-    public void textStyleSecondChat(double x, double y, CallbackInfoReturnable<Style> cir) {
-        if (!secondChat$mainChatFocused) {
-            cir.setReturnValue(secondChat$getChatHud().getClickedComponentStyleAt(secondChat$fixMouseX(x), y));
-        }
+        return original.call(font, mouseX, mouseY);
     }
 
     @Inject(method = "render", at = @At("HEAD"))
@@ -90,12 +77,12 @@ public abstract class MixinChatScreen extends Screen {
         pose.pushMatrix();
         final ChatComponent secondChat = secondChat$getChatHud();
         pose.translate(guiGraphics.guiWidth() - secondChat.getWidth(), 0);
-        secondChat.render(guiGraphics, minecraft.gui.getGuiTicks(), mouseX, mouseY, true);
+        secondChat.render(guiGraphics, font, minecraft.gui.getGuiTicks(), mouseX, mouseY, true, insertionClickMode());
         pose.popMatrix();
     }
 
     @Unique
-    private double secondChat$fixMouseX(final double mouseX) {
+    private int secondChat$fixMouseX(final int mouseX) {
         return mouseX - minecraft.getWindow().getGuiScaledWidth() + secondChat$getChatHud().getWidth();
     }
 
