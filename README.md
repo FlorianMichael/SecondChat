@@ -31,8 +31,7 @@ Dev builds - https://build.florianmichael.de/job/SecondChat
 ## Use in Gradle
 
 To use SecondChat with Gradle you can
-use [the Maven Central repository](https://mvnrepository.com/artifact/de.florianmichael/SecondChat)
-or [my own repository](https://maven.florianmichael.de/#/releases/de/florianmichael/SecondChat).  
+use [my own repository](https://maven.florianmichael.de/#/releases/de/florianmichael/SecondChat).  
 You will find instructions on how to add it into your build script there.
 
 ## Contact
