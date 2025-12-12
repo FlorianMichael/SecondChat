@@ -37,6 +37,7 @@
   "mixins": [
     "secondchat.mixins.json"
   ],
+  "accessWidener": "secondchat.accesswidener",
   "depends": {
     "minecraft": "${mcVersion}",
     "java": ">=21"
