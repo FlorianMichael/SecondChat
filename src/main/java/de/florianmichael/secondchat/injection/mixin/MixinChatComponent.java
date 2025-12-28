@@ -1,6 +1,6 @@
 /*
  * This file is part of SecondChat - https://github.com/FlorianMichael/SecondChat
- * Copyright (C) 2025 FlorianMichael/EnZaXD <florian.michael07@gmail.com> and contributors
+ * Copyright (C) 2025-2026 FlorianMichael/EnZaXD <git@florianmichael.de> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
